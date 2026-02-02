@@ -14,7 +14,6 @@ class UserPosts extends Component
     {
         $post = Post::findOrFail($postId);
         
-        // Only allow deleting own posts
         if ($post->user_id !== auth()->id()) {
             session()->flash('error', 'Unauthorized action.');
             return;

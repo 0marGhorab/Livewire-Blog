@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Post;
 use App\Models\User;
+use App\Models\Post;
+use App\Models\Like;
+use App\Models\Comment;
+use App\Models\PostView;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -11,65 +14,94 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create admin user
-        $admin = User::create([
+        $admin = User::factory()->create([
             'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
+            'email' => 'admin@admin.com',
             'is_admin' => true,
         ]);
 
-        // Create regular users
-        $user1 = User::create([
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-            'password' => bcrypt('password'),
-            'is_admin' => false,
+        // Create normal users
+        $user1 = User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'test@test.com',
         ]);
 
-        $user2 = User::create([
-            'name' => 'Jane Smith',
-            'email' => 'jane@example.com',
-            'password' => bcrypt('password'),
-            'is_admin' => false,
+        $user2 = User::factory()->create([
+            'name' => 'Test User 2',
+            'email' => 'test2@test.com',
         ]);
 
-        // Create posts for admin
-        Post::create([
-            'user_id' => $admin->id,
-            'title' => 'Welcome to Our Blog',
-            'body' => 'This is the first post on our new blog platform. We are excited to share our thoughts and ideas with you. Stay tuned for more interesting content!',
+        // Create more users for interaction
+        $users = User::factory(5)->create();
+
+        // Create posts
+        $posts = collect([
+            Post::create([
+                'title' => 'Getting Started with Laravel',
+                'body' => 'Laravel is an amazing PHP framework that makes web development a breeze. In this post, we will explore the basics.',
+                'user_id' => $user1->id,
+            ]),
+            Post::create([
+                'title' => 'Livewire Tips and Tricks',
+                'body' => 'Livewire allows you to build dynamic interfaces without leaving PHP. Here are some advanced tips.',
+                'user_id' => $user2->id,
+            ]),
+            Post::create([
+                'title' => 'Tailwind CSS Best Practices',
+                'body' => 'Tailwind CSS is a utility-first CSS framework. Let me share some best practices I have learned.',
+                'user_id' => $admin->id,
+            ]),
         ]);
 
-        Post::create([
-            'user_id' => $admin->id,
-            'title' => 'Getting Started with Laravel',
-            'body' => 'Laravel is an amazing PHP framework that makes web development a breeze. In this post, we will explore some of the key features that make Laravel so popular among developers worldwide.',
-        ]);
+        // Add some likes
+        foreach ($posts as $post) {
+            // Random users like each post
+            $randomUsers = $users->random(rand(1, 3));
+            foreach ($randomUsers as $user) {
+                Like::create([
+                    'user_id' => $user->id,
+                    'post_id' => $post->id,
+                ]);
+            }
+            
+            // Admin likes all posts
+            Like::create([
+                'user_id' => $admin->id,
+                'post_id' => $post->id,
+            ]);
+        }
 
-        // Create posts for user1
-        Post::create([
-            'user_id' => $user1->id,
-            'title' => 'My First Blog Post',
-            'body' => 'Hello everyone! This is my first blog post. I am excited to be part of this community and looking forward to sharing my experiences and learning from all of you.',
-        ]);
+        // Add some comments
+        $commentBodies = [
+            'Great post! Very helpful.',
+            'Thanks for sharing this.',
+            'I learned a lot from this.',
+            'Can you explain more about this topic?',
+            'Awesome content!',
+        ];
 
-        Post::create([
-            'user_id' => $user1->id,
-            'title' => 'Tips for Better Productivity',
-            'body' => 'In today\'s fast-paced world, productivity is key. Here are some tips I have learned over the years: 1) Start your day early, 2) Plan your tasks, 3) Take regular breaks, 4) Stay focused on one task at a time.',
-        ]);
+        foreach ($posts as $post) {
+            // Each post gets 2-4 comments
+            $numComments = rand(2, 4);
+            for ($i = 0; $i < $numComments; $i++) {
+                Comment::create([
+                    'user_id' => $users->random()->id,
+                    'post_id' => $post->id,
+                    'body' => $commentBodies[array_rand($commentBodies)],
+                ]);
+            }
+        }
 
-        // Create posts for user2
-        Post::create([
-            'user_id' => $user2->id,
-            'title' => 'The Art of Clean Code',
-            'body' => 'Writing clean code is not just about making it work - it is about making it readable, maintainable, and elegant. Today I want to share some principles that have helped me write better code.',
-        ]);
-
-        Post::create([
-            'user_id' => $user2->id,
-            'title' => 'Learning Never Stops',
-            'body' => 'As a developer, I have learned that the learning never stops. Technology evolves rapidly, and we must evolve with it. Embrace continuous learning and stay curious!',
-        ]);
+        // Add some views
+        foreach ($posts as $post) {
+            // Random users view each post
+            $viewers = $users->random(rand(3, 5));
+            foreach ($viewers as $viewer) {
+                PostView::create([
+                    'user_id' => $viewer->id,
+                    'post_id' => $post->id,
+                ]);
+            }
+        }
     }
 }

@@ -10,7 +10,6 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard - shows different view based on user role
     Route::get('/dashboard', function () {
         if (auth()->user()->is_admin) {
             return view('admin.dashboard');
@@ -21,11 +20,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Create new post
     Route::get('/posts/create', PostForm::class)->name('posts.create');
     
-    // Edit post
-    Route::get('/posts/{postId}/edit', PostForm::class)->name('posts.edit');
+    // Edit post - FIXED: Changed {postId} to {post}
+    Route::get('/posts/{post}/edit', PostForm::class)->name('posts.edit');
     
     // Profile routes (from Breeze)
     Route::view('profile', 'profile')->name('profile');
+
+    // Post Details Page (all authenticated users can view)
+    Route::get('/posts/{post}', App\Livewire\PostShow::class)
+        ->middleware(['auth'])
+        ->name('posts.show');
+
+    // Post Analytics Dashboard (only post owner can access)
+    Route::get('/posts/{post}/analytics', App\Livewire\PostAnalytics::class)
+        ->middleware(['auth'])
+        ->name('posts.analytics');
 });
 
 require __DIR__.'/auth.php';
