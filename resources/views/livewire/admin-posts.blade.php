@@ -67,7 +67,7 @@
                     </a>
 
                     <div class="flex space-x-2">
-                        
+                        <a
                             href="{{ route('posts.edit', $post) }}"
                             class="bg-gray-900 text-white px-3 py-1 rounded hover:bg-gray-700 transition duration-300"
                         >

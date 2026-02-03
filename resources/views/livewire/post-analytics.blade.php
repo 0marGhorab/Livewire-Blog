@@ -1,4 +1,4 @@
-<x-app-layout>
+<div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Analytics') }}: {{ $post->title }}
@@ -127,4 +127,4 @@
             <a href="{{ route('dashboard') }}" class="text-blue-600 hover:underline">← Back to Dashboard</a>
         </div>
     </div>
-</x-app-layout>
+</div>

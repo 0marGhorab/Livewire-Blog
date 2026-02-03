@@ -55,7 +55,7 @@
         </div>
 
         <!-- Analytics Button (only for post owner) -->
-        @if(auth()->id() === $post->user_id)
+        @if(auth()->id() === $post->user_id || auth()->user()->is_admin)
             <div class="mt-4 pt-4 border-t border-gray-200">
                 <a href="{{ route('posts.analytics', $post) }}" 
                    class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
