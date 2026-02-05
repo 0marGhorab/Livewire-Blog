@@ -13,14 +13,18 @@
             <span>{{ $post->created_at->format('M d, Y') }}</span>
         </div>
 
-        <!-- Post Image -->
-        @if($post->image)
-            <div class="w-full mb-6 overflow-hidden rounded-lg bg-gray-100">
-                <img 
-                    src="{{ Storage::url($post->image) }}" 
-                    alt="{{ $post->title }}" 
-                    class="w-full h-auto object-contain max-h-96"
-                >
+        <!-- Post Images -->
+        @if($post->images && $post->images->count() > 0)
+            <div class="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                @foreach($post->images as $image)
+                    <div class="w-1/3 overflow-hidden rounded-lg bg-gray-100">
+                        <img
+                            src="{{ Storage::url($image->path) }}"
+                            alt="{{ $post->title }}"
+                            class="w-full h-auto object-contain max-h-96"
+                        >
+                    </div>
+                @endforeach
             </div>
         @endif
 

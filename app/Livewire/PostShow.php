@@ -35,7 +35,7 @@ class PostShow extends Component
     public function render()
     {
         // Fetch the post fresh on each render
-        $post = Post::with(['user'])->findOrFail($this->postId);
+        $post = Post::with(['user', 'images'])->findOrFail($this->postId);
 
         return view('livewire.post-show', compact('post'))
             ->layout('layouts.app');

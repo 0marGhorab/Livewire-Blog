@@ -32,42 +32,44 @@
             @error('body') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
         </div>
 
+        @if($isEditing && $post->images->count() > 0)
+            <div>
+                <label class="block text-sm font-medium mb-2">Current Images</label>
+                <div class="grid grid-cols-3 gap-4">
+                    @foreach($post->images as $image)
+                        <div class="relative">
+                            <img src="{{ Storage::url($image->path) }}" class="w-full h-32 object-cover rounded">
+                            <button 
+                                type="button" 
+                                wire:click="removeImage({{ $image->id }})"
+                                class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <!-- Image Upload Field -->
         <div>
-            <label class="block text-sm font-medium mb-1">Image (optional)</label>
+            <label class="block text-sm font-medium mb-1">Upload Images (max 10)</label>
+            <input type="file" wire:model="images" multiple accept="image/*" class="w-full border rounded px-3 py-2">
+            @error('images.*') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             
-            @if ($existingImage && !$image)
-                <div class="mb-3">
-                    <img src="{{ Storage::url($existingImage) }}" alt="Current image" class="w-32 h-32 object-cover rounded border">
-                    <button 
-                        type="button" 
-                        wire:click="removeImage" 
-                        class="text-red-600 text-sm mt-1 hover:underline"
-                    >
-                        Remove Image
-                    </button>
-                </div>
-            @endif
-
-            <!-- File input -->
-            <input 
-                type="file" 
-                wire:model="image" 
-                accept="image/*" 
-                class="w-full border border-gray-300 rounded px-3 py-2"
-            >
-            @error('image') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-            
-            <!-- Loading indicator for image upload -->
-            <div wire:loading wire:target="image" class="text-sm text-gray-600 mt-1">
-                Uploading image...
+            <div wire:loading wire:target="images" class="text-sm text-gray-600 mt-1">
+                Uploading...
             </div>
             
-            <!-- Preview new image -->
-            @if ($image)
-                <div class="mt-2">
-                    <p class="text-sm text-gray-600 mb-1">Preview:</p>
-                    <img src="{{ $image->temporaryUrl() }}" class="w-32 h-32 object-cover rounded border">
+            <!-- Preview new images -->
+            @if (!empty($images))
+                <div class="grid grid-cols-4 gap-4 mt-2">
+                    @foreach($images as $image)
+                        <img src="{{ $image->temporaryUrl() }}" class="w-full h-16 object-contain rounded">
+                    @endforeach
                 </div>
             @endif
         </div>

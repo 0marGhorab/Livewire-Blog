@@ -9,12 +9,48 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Route::get('/test-images', function() {
+//     $posts = \App\Models\Post::with('images')->get();
+    
+//     foreach($posts as $post) {
+//         echo "<h2>Post #{$post->id}: {$post->title}</h2>";
+//         echo "<p>Images count: {$post->images->count()}</p>";
+        
+//         if($post->images->count() > 0) {
+//             echo "<div style='display: flex; gap: 10px;'>";
+//             foreach($post->images as $image) {
+//                 $url = Storage::url($image->path);
+//                 echo "<div>";
+//                 echo "<img src='{$url}' style='width: 200px; height: 200px; object-fit: cover;'>";
+//                 echo "<p>Path: {$image->path}</p>";
+//                 echo "</div>";
+//             }
+//             echo "</div>";
+//         }
+//         echo "<hr>";
+//     }
+// })->middleware('auth');
+
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        if (auth()->user()->is_admin) {
-            return view('admin.dashboard');
+    // Delete post
+    Route::delete('/posts/{post}', function (\App\Models\Post $post) {
+        // Authorization
+        if (auth()->id() !== $post->user_id && !auth()->user()->is_admin) {
+            abort(403);
         }
-        return view('user.dashboard');
+        
+        $post->delete();
+        return redirect()->route('dashboard')->with('message', 'Post deleted successfully!');
+    })->name('posts.destroy');
+
+    Route::get('/dashboard', function () {
+        $posts = \App\Models\Post::with(['user', 'images'])
+            ->latest()
+            ->paginate(15);
+        if (auth()->user()->is_admin) {
+            return view('admin.dashboard', compact('posts'));
+        }
+        return view('user.dashboard', compact('posts'));
     })->name('dashboard');
     
     // Create new post

@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Post extends Model
 {
-    protected $fillable = ['title', 'body', 'user_id', 'image'];
+    protected $fillable = ['title', 'body', 'user_id'];
+
+    protected $with = ['images'];
 
     public function user(): BelongsTo
     {
@@ -30,6 +32,17 @@ class Post extends Model
         return $this->hasMany(PostView::class);
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(PostImage::class)->orderBy('order');
+    }
+
+    public function primaryImage()
+    {
+        return $this->images()->orderBy('order')->first();
+    }
+
+    // Helper methods
     public function isLikedByUser($userId): bool
     {
         return $this->likes()->where('user_id', $userId)->exists();
@@ -48,5 +61,21 @@ class Post extends Model
     public function commentsCount(): int
     {
         return $this->comments()->count();
+    }
+
+    // Auto-delete related data when post is deleted
+    protected static function booted(): void
+    {
+        static::deleting(function (Post $post) {
+            // Delete all images (files + records)
+            $post->images()->each(function ($image) {
+                $image->delete(); // Triggers PostImage's deleting event
+            });
+            
+            // Delete other relationships
+            $post->likes()->delete();
+            $post->comments()->delete();
+            $post->views()->delete();
+        });
     }
 }

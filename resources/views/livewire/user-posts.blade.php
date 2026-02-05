@@ -6,14 +6,36 @@
     <div class="space-y-4">
         @forelse ($posts as $post)
             <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition duration-300 animate-fade-in">
-                {{-- Post Image --}}
-                @if($post->image)
-                    <div class="w-full mb-4 overflow-hidden rounded-lg bg-gray-100">
-                        <img 
-                            src="{{ Storage::url($post->image) }}" 
-                            alt="{{ $post->title }}" 
-                            class="w-full h-auto object-contain max-h-96"
-                        >
+                {{-- Post Images --}}
+                @if($post->images && $post->images->count() > 0)
+                    @php
+                        $imagesCount = $post->images->count();
+                        $primaryImage = $post->images->first();
+                    @endphp
+                    <div class="mb-4">
+                        <div class="relative w-full overflow-hidden rounded-lg bg-gray-100 h-64">
+                            {{-- Primary image --}}
+                            <img
+                                src="{{ Storage::url($primaryImage->path) }}"
+                                alt="{{ $post->title }}"
+                                class="w-1/2 h-full object-contain"
+                            >
+
+                            {{-- Secondary --}}
+                            @if($imagesCount > 1)
+                                <a
+                                    href="{{ route('posts.show', $post) }}"
+                                    class="absolute bottom-0 right-0 w-1/3 h-full bg-gray-900/80 text-white flex flex-col items-center justify-center text-center px-2"
+                                >
+                                    <span class="text-sm font-semibold">
+                                        {{ $imagesCount }} photos
+                                    </span>
+                                    <span class="text-xs text-gray-200">
+                                        View gallery
+                                    </span>
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 @endif
 

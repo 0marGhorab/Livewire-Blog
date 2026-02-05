@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Post;
+use App\Models\PostImage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
@@ -14,14 +15,13 @@ class PostForm extends Component
     public ?Post $post = null;
     public $title = '';
     public $body = '';
-    public $image;
-    public $existingImage;
+    public $images = []; // Multiple images
     public $isEditing = false;
 
     protected $rules = [
         'title' => 'required|min:3|max:255',
         'body' => 'required|min:10',
-        'image' => 'nullable|image|max:2048',
+        'images.*' => 'nullable|image|max:2048',
     ];
 
     public function mount(?Post $post = null)
@@ -33,64 +33,65 @@ class PostForm extends Component
                 abort(403);
             }
             
-            $this->post = $post;
+            $this->post = $post->load('images');
             $this->title = $post->title;
             $this->body = $post->body;
-            $this->existingImage = $post->image;
         }
     }
 
     public function save()
     {
         $this->validate();
-        $imagePath = $this->existingImage;
-        if ($this->image) {
-            if ($this->existingImage) {
-                Storage::disk('public')->delete($this->existingImage);
-            }
-            $imagePath = $this->image->store('posts', 'public');
-        }
 
         if ($this->isEditing) {
             $this->post->update([
                 'title' => $this->title,
                 'body' => $this->body,
-                'image' => $imagePath,
             ]);
 
-            session()->flash('message', 'Post updated successfully!');
+            $post = $this->post;
         } else {
-            Post::create([
+            $post = Post::create([
                 'title' => $this->title,
                 'body' => $this->body,
-                'image' => $imagePath,
                 'user_id' => auth()->id(),
             ]);
-
-            session()->flash('message', 'Post created successfully!');
-            
-            $this->reset(['title', 'body', 'image']);
         }
 
+        // Handle multiple image uploads
+        if (!empty($this->images)) {
+            $maxOrder = $post->images()->max('order') ?? -1;
+            
+            foreach ($this->images as $index => $image) {
+                $path = $image->store('posts', 'public');
+                
+                PostImage::create([
+                    'post_id' => $post->id,
+                    'path' => $path,
+                    'order' => $maxOrder + $index + 1,
+                ]);
+            }
+        }
+
+        session()->flash('message', $this->isEditing ? 'Post updated successfully!' : 'Post created successfully!');
+        
         return redirect()->route('dashboard');
     }
 
-    public function removeImage()
+    public function removeImage($imageId)
     {
-        if ($this->existingImage) {
-            Storage::disk('public')->delete($this->existingImage);
-            
-            if ($this->post) {
-                $this->post->update(['image' => null]);
-            }
-            
-            $this->existingImage = null;
+        $image = PostImage::findOrFail($imageId);
+        
+        if ($this->post && $image->post_id === $this->post->id) {
+            $image->delete();
+            $this->post->refresh();
             session()->flash('message', 'Image removed successfully!');
         }
     }
 
     public function render()
     {
-        return view('livewire.post-form')->layout('layouts.app');
+        return view('livewire.post-form')
+            ->layout('layouts.app');
     }
 }
