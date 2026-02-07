@@ -2,10 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   Global brand theme (shared across all pages)
+   ============================================ */
+:root {
+    --color-brand-primary: #ce6a6b;
+    --color-brand-secondary: #ebaca2;
+    --color-brand-button-secondary: #d4958e;
+    --color-brand-button-secondary-hover: #c4847d;
+    --color-brand-primary-hover: #b85a5b;
+    --color-offwhite: #faf8f7;
+}
+
+/* Shared page background: 10% primary → off-white (bottom-right) */
+.page-bg {
+    background: linear-gradient(
+        135deg,
+        rgba(206, 106, 107, 0.1) 0%,
+        var(--color-offwhite) 70%,
+        rgb(255, 253, 251) 100%
+    );
+}
+
 @layer utilities {
     .animate-fade-in {
-        animation: fadeIn 0.5s ease-in;
+        animation: fadeIn 0.5s ease-out forwards;
     }
+
+    /* Page/section entrance: use on main content wrapper */
+    .animate-page-in {
+        animation: fadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* List/card stagger: use with style="animation-delay: Xms" */
+    .animate-fade-in-up {
+        opacity: 0;
+        animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Short delay utilities for stagger */
+    .animation-delay-75 { animation-delay: 75ms; }
+    .animation-delay-150 { animation-delay: 150ms; }
+    .animation-delay-200 { animation-delay: 200ms; }
+    .animation-delay-300 { animation-delay: 300ms; }
 }
 
 @keyframes fadeIn {
@@ -17,4 +56,148 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Welcome / landing animations (reusable) */
+@keyframes slideFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes showOff {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-80px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(80px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-welcome-title {
+    animation: slideFromTop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-welcome-subtitle {
+    animation: showOff 1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+}
+
+.animate-welcome-btn-left {
+    animation: slideFromLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+.animate-welcome-btn-right {
+    animation: slideFromRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+/* Guest layout (login/register): logo from top, form fade-up */
+@keyframes guestLogoIn {
+    from {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes guestFormIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-guest-logo {
+    animation: guestLogoIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-guest-form {
+    animation: guestFormIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+}
+
+/* Logo with transparent background: blend out light backgrounds */
+.logo-no-bg {
+    mix-blend-mode: multiply;
+}
+
+/* 3D button (darker, with depth) */
+.btn-3d {
+    box-shadow:
+        0 4px 0 0 var(--color-brand-primary-hover),
+        0 6px 10px -2px rgba(0, 0, 0, 0.2),
+        0 4px 6px -4px rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-3d:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 6px 0 0 var(--color-brand-primary-hover),
+        0 8px 12px -2px rgba(0, 0, 0, 0.22),
+        0 6px 8px -4px rgba(0, 0, 0, 0.18);
+}
+.btn-3d:active {
+    transform: translateY(2px);
+    box-shadow:
+        0 2px 0 0 var(--color-brand-primary-hover),
+        0 2px 4px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Welcome page: floating logo */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.logo-float {
+    animation: float 4s ease-in-out infinite;
+}
+
+/* Float starts after entrance animation (e.g. welcome logo) */
+.logo-float-after-in {
+    animation: guestLogoIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+               float 4s ease-in-out 0.8s infinite;
+}
+
+/* Alpine.js: avoid flash of unstyled content before hydration */
+[x-cloak] {
+    display: none !important;
 }

@@ -13,10 +13,17 @@ class PostForm extends Component
     use WithFileUploads;
 
     public ?Post $post = null;
+
     public $title = '';
+
     public $body = '';
+
     public $images = []; // Multiple images
+
     public $isEditing = false;
+
+    /** @var array<int> Order of image IDs for drag-and-drop reordering */
+    public array $imageOrder = [];
 
     protected $rules = [
         'title' => 'required|min:3|max:255',
@@ -36,6 +43,19 @@ class PostForm extends Component
             $this->post = $post->load('images');
             $this->title = $post->title;
             $this->body = $post->body;
+            $this->imageOrder = $post->images->sortBy('order')->pluck('id')->values()->all();
+        }
+    }
+
+    public function reorderImages(array $orderedIds): void
+    {
+        if (! $this->isEditing || ! $this->post) {
+            return;
+        }
+        $validIds = $this->post->images->pluck('id')->all();
+        $orderedIds = array_values(array_intersect($orderedIds, $validIds));
+        if (count($orderedIds) === count($validIds)) {
+            $this->imageOrder = $orderedIds;
         }
     }
 
@@ -48,6 +68,10 @@ class PostForm extends Component
                 'title' => $this->title,
                 'body' => $this->body,
             ]);
+
+            foreach (array_values($this->imageOrder) as $position => $imageId) {
+                PostImage::where('id', $imageId)->where('post_id', $this->post->id)->update(['order' => $position]);
+            }
 
             $post = $this->post;
         } else {
@@ -84,14 +108,33 @@ class PostForm extends Component
         
         if ($this->post && $image->post_id === $this->post->id) {
             $image->delete();
+            $this->imageOrder = array_values(array_filter($this->imageOrder, fn (int $id) => $id !== (int) $imageId));
             $this->post->refresh();
             session()->flash('message', 'Image removed successfully!');
         }
     }
 
+    public function getOrderedImages(): \Illuminate\Support\Collection
+    {
+        if (! $this->post || empty($this->imageOrder)) {
+            return $this->post?->images->sortBy('order') ?? collect();
+        }
+        $byId = $this->post->images->keyBy('id');
+
+        return collect($this->imageOrder)->map(fn (int $id) => $byId->get($id))->filter()->values();
+    }
+
     public function render()
     {
-        return view('livewire.post-form')
-            ->layout('layouts.app');
+        $orderedImages = $this->getOrderedImages();
+
+        return view('livewire.post-form', [
+            'orderedImages' => $orderedImages,
+            'imageOrder' => $this->imageOrder,
+            'imagesById' => $orderedImages->keyBy('id')->map(fn ($img) => [
+                'id' => $img->id,
+                'url' => Storage::url($img->path),
+            ])->all(),
+        ])->layout('layouts.app');
     }
 }
